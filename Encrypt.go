@@ -10,25 +10,58 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"log"
 	mathrand "math/rand"
 	"os"
-	"time"
 	"os/exec"
+	"time"
 )
-
 
 func main() {
 	//generates rsa encryption key
 	//working on making ir random
 	//it was already random
-	//gen()
+	genRSA()
 
+	//signs and unsigns file with rsa
+	signRSA()
+
+	// how you use primary to encrypt files
+	primary("keys/private.pem", nil, false)
+
+	//How you use primary to take in a message and encrypt that
+	message := []byte("\n\nThis was pulled in from another program\n")
+	primary("", message, true)
+
+	//How you use primary to write your own message
+	sendMessage := []byte(takeInput("\nWhat would you like your message to be?\n"))
+	primary("", sendMessage, true)
+
+	//	cmd("ssh", "lol@localhost", "", "", "")
+	//	cmd("scp", "key.txt", "localhost@lol:/home", "", "")
+
+}
+
+func primary(fileToEncrypt string, messageToEncrypt []byte, message bool) {
+	var plaintext []byte
+	//if it is a message than take in the message as plaintext if it is a file than pull it out of the file and save it as a []byte
+
+	if message == false {
+		encryptFile := readFile(fileToEncrypt)
+		plaintext = []byte(encryptFile)
+	} else {
+		plaintext = []byte(messageToEncrypt)
+	}
+	//print the orraginal text before it was turned into []byte
+	//That is what the array of bytes was before I fixed it
+
+	fmt.Println(string(plaintext))
+
+	//generates key for cypher
 	key := []byte(RandStringRunes(32))
-	plaintext := []byte(takeInput("\n\nWhat would you like your message to be?\n"))
 
 	//catch error for the message
-	//	fmt.Print(plaintext)
 	ciphertext, err := encrypt(key, plaintext)
 	if err != nil {
 		log.Fatal(err)
@@ -37,24 +70,40 @@ func main() {
 	//catch error for the cypher
 	//normally because it is the wrong length password
 	//if you are ever changing this make sure you always keep a 32 char password
-	fmt.Printf("%0x\n", ciphertext)
+	fmt.Printf("%0x\n\n\n", ciphertext)
+
+	//writes the encrypted text to a file if it came from a file
+	//When you pull this back out you might need to cast it back to a []byte to get it to work
+	if message == false {
+		writeFile(string(ciphertext), (fileToEncrypt + ".encrypted"))
+	}
 	result, err := decrypt(key, ciphertext)
 	if err != nil {
 		log.Fatal(err)
 	}
 	//if no errors are cought than it just prints out the encrypted result
 	fmt.Printf("%s\n", result)
-
-	//	fmt.Println(SignPKCS1v15(io.reader, private.key, , cyphertext))
-
+	writeFile(string(key), "key.txt")
 }
-//run ipfs commands from go 
-func cmd() {
-    output, err := exec.Command("ipfs", "daemon").CombinedOutput()
-        if err != nil {
-          os.Stderr.WriteString(err.Error())
-    }
-    fmt.Println(string(output))
+
+//reads out a file and I use it to read intoa string
+func readFile(file string) []byte {
+	b, err := ioutil.ReadFile(file) // just pass the file name
+	if err != nil {
+		fmt.Print(err)
+	}
+	return b
+}
+
+//Write a string to a file just takes in a string and a file name and writes it out
+func writeFile(text string, fileName string) {
+	file, err := os.Create(fileName)
+	if err != nil {
+		log.Fatal("Cannot create file", err)
+	}
+	defer file.Close()
+
+	fmt.Fprintf(file, text)
 }
 
 //these are charectors that can be included in the alpanumaric string that creates the key for the aes encryption
@@ -147,4 +196,13 @@ func decrypt(key, text []byte) ([]byte, error) {
 	}
 	//return the decrypted data and not an error
 	return data, nil
+}
+
+//run ipfs commands from go
+func cmd(one string, two string, three string, four string, five string) {
+	output, err := exec.Command(one, two, three, four, five).CombinedOutput()
+	if err != nil {
+		os.Stderr.WriteString(err.Error())
+	}
+	fmt.Println(string(output))
 }
