@@ -10,15 +10,16 @@ import (
 	"encoding/pem"
 	"errors"
 	"fmt"
+	"io/ioutil"
 )
 
-func signRSA() {
+func signRSA(file string) {
 	signer, err := loadPrivateKey("private.pem")
 	if err != nil {
 		fmt.Errorf("signer is damaged: %v", err)
 	}
 
-	toSign := "date: Thu, 05 Jan 2012 21:31:40 GMT"
+	toSign := file
 
 	signed, err := signer.Sign([]byte(toSign))
 	if err != nil {
@@ -42,8 +43,12 @@ func signRSA() {
 
 // loadPrivateKey loads an parses a PEM encoded private key file.
 func loadPublicKey(path string) (Unsigner, error) {
+	data, err := ioutil.ReadFile(path)
 
-	return parsePublicKey([]byte(readFile("keys/public.pem")))
+	if err != nil {
+		return nil, err
+	}
+	return parsePublicKey(data)
 }
 
 // parsePublicKey parses a PEM encoded private key.
@@ -70,7 +75,11 @@ func parsePublicKey(pemBytes []byte) (Unsigner, error) {
 
 // loadPrivateKey loads an parses a PEM encoded private key file.
 func loadPrivateKey(path string) (Signer, error) {
-	return parsePrivateKey([]byte(readFile("keys/private.pem")))
+	data, err := ioutil.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+	return parsePrivateKey(data)
 }
 
 // parsePublicKey parses a PEM encoded private key.
@@ -150,6 +159,7 @@ func (r *rsaPrivateKey) Sign(data []byte) ([]byte, error) {
 func (r *rsaPublicKey) Unsign(message []byte, sig []byte) error {
 	h := sha256.New()
 	h.Write(message)
+	fmt.Println(string(message))
 	d := h.Sum(nil)
 	return rsa.VerifyPKCS1v15(r.PublicKey, crypto.SHA256, d, sig)
 }

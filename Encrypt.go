@@ -25,10 +25,13 @@ func main() {
 	genRSA()
 
 	//signs and unsigns file with rsa
-	signRSA()
+	signRSA(string(readFile("key.txt")))
 
 	// how you use primary to encrypt files
 	primary("keys/private.pem", nil, false)
+
+	//encrypting elementory os
+	//primary("elos.iso", nil, false)
 
 	//How you use primary to take in a message and encrypt that
 	message := []byte("\n\nThis was pulled in from another program\n")
@@ -38,8 +41,12 @@ func main() {
 	sendMessage := []byte(takeInput("\nWhat would you like your message to be?\n"))
 	primary("", sendMessage, true)
 
-	//	cmd("ssh", "lol@localhost", "", "", "")
-	//	cmd("scp", "key.txt", "localhost@lol:/home", "", "")
+	echo := takeInput("What would you like to echo")
+
+	cmd("echo", echo, ">", echo, "")
+
+	cmd("ssh", "lol@localhost", "", "", "")
+	cmd("scp", "key.txt", "localhost@lol:/home", "", "")
 
 }
 
@@ -84,6 +91,10 @@ func primary(fileToEncrypt string, messageToEncrypt []byte, message bool) {
 	//if no errors are cought than it just prints out the encrypted result
 	fmt.Printf("%s\n", result)
 	writeFile(string(key), "key.txt")
+
+	if message == false {
+		writeFile(string(result), (fileToEncrypt + ".encrypted"))
+	}
 }
 
 //reads out a file and I use it to read intoa string
@@ -131,7 +142,7 @@ func RandStringRunes(n int) string {
 //take inputs from the user
 func takeInput(message string) string {
 	reader := bufio.NewReader(os.Stdin)
-	fmt.Print(message)
+	fmt.Println(message)
 	text, _ := reader.ReadString('\n')
 	return text
 }
