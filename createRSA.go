@@ -13,7 +13,7 @@ import (
 
 func genRSA() {
 	reader := rand.Reader
-	bitSize := 2048
+	bitSize := 256
 
 	key, err := rsa.GenerateKey(reader, bitSize)
 	checkError(err)
