@@ -5,11 +5,13 @@ package main
 
 import (
 	"bufio"
+	"crypto"
 	"crypto/aes"
 	"crypto/cipher"
 	cryptorand "crypto/rand"
 	"crypto/rsa"
 	"crypto/sha1"
+	"crypto/sha256"
 	"crypto/x509"
 	"encoding/asn1"
 	"encoding/base64"
@@ -31,40 +33,16 @@ func main() {
 	writeFile((RandStringRunes(32)), "keys/aes.key")
 	//generates rsa keys and then encrypts the aes key with that key it just generated
 	rsaEvery()
-}
+	//encrypts or decrypts a file with rsa
+	//the first thing passed in is the file that is to be encrypted/decrypted
+	//the second is the output file
+	//and the third is true if you are decrypting a file and false if you are encrypting
 
-//
-// func genAES() {
-// 	output3, err3 := exec.Command("wsl", "openssl", "rand", "-out", "keys/aes.key", "32").CombinedOutput()
-// 	fmt.Println(string(output3))
-// 	if err3 != nil {
-// 		os.Stderr.WriteString(err3.Error())
-// 	}
-// }
-//
-// func encAESKey() {
-// 	output6, err6 := exec.Command("wsl", "openssl", "enc", "-d", "aes-256-cbc", "-in", "keys/aes.key", "-out", "keys/aes.key.enc", "-kfile", "keys/aes.key").CombinedOutput()
-// 	fmt.Println(string(output6))
-// 	if err6 != nil {
-// 		os.Stderr.WriteString(err6.Error())
-// 	}
-//
-// 	output4, err4 := exec.Command("wsl", "openssl", "rsautl", "-encrypt", "-inkey", "keys/rsa_key.pub", "-pubin", "-in", "keys/aes.key", "-out", "keys/aes.key.enc").CombinedOutput()
-// 	fmt.Println(string(output4))
-// 	if err4 != nil {
-// 		os.Stderr.WriteString(err4.Error())
-// 	}
-//
-// 	deleteFile("keys/aes.key")
-// }
-//
-// func decryptAESKey() {
-// 	output5, err5 := exec.Command("wsl", "openssl", "rsautl", "-decrypt", "-inkey", "keys/rsa_key.pri", "-in", "keys/aes.key.enc", "-out", "keys/aes.key").CombinedOutput()
-// 	fmt.Println(string(output5))
-// 	if err5 != nil {
-// 		os.Stderr.WriteString(err5.Error())
-// 	}
-// }
+	encDec("keys/aes.key", "keys/aes.key.enc", false)
+	deleteFile("keys/aes.key")
+	encDec("keys/aes.key.enc", "keys/aes.key", true)
+	signRSA("keys/aes.key.enc")
+}
 
 //function to take input from a file
 func takeInput(message string) string {
@@ -236,30 +214,25 @@ func RandStringRunes(n int) string {
 	}
 	//returnes the filled slice
 	return string(b)
+
 }
 func rsaEvery() {
-	kp, err := CreateKeyPair()
-	if err != nil {
-		fmt.Printf("%v", err)
-	}
-	savePublicPEMKey("keys/rsa_key.pub", kp.PublicKey)
-	savePEMKey("keys/rsa_key.pri", kp)
-	if err != nil {
-		fmt.Printf("%v", err)
-	}
-	//encrypts or decrypts a file with rsa
-	//the first thing passed in is the file that is to be encrypted/decrypted
-	//the second is the output file
-	//and the third is true if you are decrypting a file and false if you are encrypting
-	encDec("keys/aes.key", "keys/aes.key.enc", false)
-	deleteFile("keys/aes.key")
-	encDec("keys/aes.key.enc", "keys/aes.key", true)
+	//kp, err := CreateKeyPair()
+	//
+	// if err != nil {
+	// 	fmt.Printf("%v", err)
+	// }
+	// savePublicPEMKey("keys/rsa_key.pub", kp.PublicKey)
+	// savePEMKey("keys/rsa_key.pri", kp)
+	// if err != nil {
+	// 	fmt.Printf("%v", err)
+	// }
 }
 
 //creates the rsa keys it only returns one, but the public key is generated from the private key
 func CreateKeyPair() (*rsa.PrivateKey, error) {
 	//4096 bit key. You can change this, but this is the most secure for rsa
-	size := 4096
+	size := 1024
 
 	priv, err := rsa.GenerateKey(cryptorand.Reader, size)
 	if err != nil {
@@ -270,30 +243,6 @@ func CreateKeyPair() (*rsa.PrivateKey, error) {
 	return priv, err
 
 }
-
-// func Encrypt(in []byte, pub rsa.PublicKey) ([]byte, error) {
-// 	sha1 := sha1.New()
-// 	out, err := rsa.EncryptOAEP(sha1, rand.Reader, &pub, in, nil)
-// 	if err != nil {
-// 		log.Fatalf("Failed to encrypt message %v", err)
-// 		return nil, err
-// 	}
-// 	return out, nil
-// }
-
-// func Decrypt(ciphertext []byte, priv *rsa.PrivateKey) ([]byte, error) {
-//
-// 	sha1 := sha1.New()
-//
-// 	out, err := rsa.DecryptOAEP(sha1, rand.Reader, priv, ciphertext, nil)
-//
-// 	if err != nil {
-// 		log.Fatalf("Failed to decrypt message %v", err)
-// 		return nil, err
-// 	}
-//
-// 	return out, nil
-// }
 
 //write the public key to a file as a pem file
 func savePublicPEMKey(fileName string, pubkey rsa.PublicKey) {
@@ -395,4 +344,146 @@ func encDec(inFile string, outFile string, decrypt bool) {
 	if err := ioutil.WriteFile(outFile, out, 0600); err != nil {
 		log.Fatalf("write output: %s", err)
 	}
+}
+
+func signRSA(file string) {
+	signer, err := loadPrivateKey("rsa_key.pri")
+	if err != nil {
+		fmt.Errorf("signer is damaged: %v", err)
+	}
+
+	toSign := readFile(file)
+
+	signed, err := signer.Sign([]byte(toSign))
+	if err != nil {
+		fmt.Errorf("could not sign request: %v", err)
+	}
+	sig := base64.StdEncoding.EncodeToString(signed)
+	fmt.Printf("Signature: %v\n", sig)
+
+	parser, perr := loadPublicKey("keys/rsa_key.pub")
+	if perr != nil {
+		fmt.Errorf("could not sign request: %v", err)
+	}
+
+	err = parser.Unsign([]byte(toSign), signed)
+	if err != nil {
+		fmt.Errorf("could not sign request: %v", err)
+	}
+
+	fmt.Printf("Unsign error: %v\n", err)
+}
+
+// loadPrivateKey loads an parses a PEM encoded private key file.
+func loadPublicKey(path string) (Unsigner, error) {
+
+	return parsePublicKey([]byte(readFile(path)))
+}
+
+// parsePublicKey parses a PEM encoded private key.
+func parsePublicKey(pemBytes []byte) (Unsigner, error) {
+	block, _ := pem.Decode(pemBytes)
+	if block == nil {
+		return nil, errors.New("ssh: no key found")
+	}
+
+	var rawkey interface{}
+	switch block.Type {
+	case "PUBLIC KEY":
+		rsa, err := x509.ParsePKIXPublicKey(block.Bytes)
+		if err != nil {
+			return nil, err
+		}
+		rawkey = rsa
+	default:
+		return nil, fmt.Errorf("ssh: unsupported key type %q", block.Type)
+	}
+
+	return newUnsignerFromKey(rawkey)
+}
+
+// loadPrivateKey loads an parses a PEM encoded private key file.
+func loadPrivateKey(path string) (Signer, error) {
+	return parsePrivateKey([]byte(readFile("keys/rsa_key.pri")))
+}
+
+// parsePublicKey parses a PEM encoded private key.
+func parsePrivateKey(pemBytes []byte) (Signer, error) {
+	block, _ := pem.Decode(pemBytes)
+	if block == nil {
+		return nil, errors.New("ssh: no key found")
+	}
+
+	var rawkey interface{}
+	switch block.Type {
+	case "RSA PRIVATE KEY":
+		rsa, err := x509.ParsePKCS1PrivateKey(block.Bytes)
+		if err != nil {
+			return nil, err
+		}
+		rawkey = rsa
+	default:
+		return nil, fmt.Errorf("ssh: unsupported key type %q", block.Type)
+	}
+	return newSignerFromKey(rawkey)
+}
+
+// A Signer is can create signatures that verify against a public key.
+type Signer interface {
+	// Sign returns raw signature for the given data. This method
+	// will apply the hash specified for the keytype to the data.
+	Sign(data []byte) ([]byte, error)
+}
+
+// A Signer is can create signatures that verify against a public key.
+type Unsigner interface {
+	// Sign returns raw signature for the given data. This method
+	// will apply the hash specified for the keytype to the data.
+	Unsign(data []byte, sig []byte) error
+}
+
+func newSignerFromKey(k interface{}) (Signer, error) {
+	var sshKey Signer
+	switch t := k.(type) {
+	case *rsa.PrivateKey:
+		sshKey = &rsaPrivateKey{t}
+	default:
+		return nil, fmt.Errorf("ssh: unsupported key type %T", k)
+	}
+	return sshKey, nil
+}
+
+func newUnsignerFromKey(k interface{}) (Unsigner, error) {
+	var sshKey Unsigner
+	switch t := k.(type) {
+	case *rsa.PublicKey:
+		sshKey = &rsaPublicKey{t}
+	default:
+		return nil, fmt.Errorf("ssh: unsupported key type %T", k)
+	}
+	return sshKey, nil
+}
+
+type rsaPublicKey struct {
+	*rsa.PublicKey
+}
+
+type rsaPrivateKey struct {
+	*rsa.PrivateKey
+}
+
+// Sign signs data with rsa-sha256
+func (r *rsaPrivateKey) Sign(data []byte) ([]byte, error) {
+	h := sha256.New()
+	h.Write(data)
+	d := h.Sum(nil)
+	return rsa.SignPKCS1v15(cryptorand.Reader, r.PrivateKey, crypto.SHA256, d)
+}
+
+// Unsign verifies the message using a rsa-sha256 signature
+func (r *rsaPublicKey) Unsign(message []byte, sig []byte) error {
+	h := sha256.New()
+	h.Write(message)
+	d := h.Sum(nil)
+	return rsa.VerifyPKCS1v15(r.PublicKey, crypto.SHA256, d, sig)
 }
