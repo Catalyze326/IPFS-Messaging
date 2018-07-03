@@ -37,6 +37,7 @@ func main() {
 	//the first thing passed in is the file that is to be encrypted/decrypted
 	//the second is the output file
 	//and the third is true if you are decrypting a file and false if you are encrypting
+	genRSA2()
 
 	encDec("keys/aes.key", "keys/aes.key.enc", false)
 	deleteFile("keys/aes.key")
@@ -217,31 +218,29 @@ func RandStringRunes(n int) string {
 
 }
 func rsaEvery() {
-	//kp, err := CreateKeyPair()
-	//
-	// if err != nil {
-	// 	fmt.Printf("%v", err)
-	// }
-	// savePublicPEMKey("keys/rsa_key.pub", kp.PublicKey)
-	// savePEMKey("keys/rsa_key.pri", kp)
-	// if err != nil {
-	// 	fmt.Printf("%v", err)
-	// }
+	kp, err := CreateKeyPair()
+
+	if err != nil {
+		fmt.Printf("%v", err)
+	}
+	savePublicPEMKey("keys/rsa_key.pub", kp.PublicKey)
+	savePEMKey("keys/rsa_key.pri", kp)
+	if err != nil {
+		fmt.Printf("%v", err)
+	}
 }
 
 //creates the rsa keys it only returns one, but the public key is generated from the private key
 func CreateKeyPair() (*rsa.PrivateKey, error) {
 	//4096 bit key. You can change this, but this is the most secure for rsa
-	size := 1024
+	size := 4096
 
 	priv, err := rsa.GenerateKey(cryptorand.Reader, size)
 	if err != nil {
 		log.Fatalf("Failed to generate %d-bit key", size)
 		return nil, err
 	}
-
 	return priv, err
-
 }
 
 //write the public key to a file as a pem file
@@ -347,12 +346,12 @@ func encDec(inFile string, outFile string, decrypt bool) {
 }
 
 func signRSA(file string) {
-	signer, err := loadPrivateKey("rsa_key.pri")
+	signer, err := loadPrivateKey("keys/rsa_key.pri")
 	if err != nil {
 		fmt.Errorf("signer is damaged: %v", err)
 	}
 
-	toSign := readFile(file)
+	toSign := "date: Thu, 05 Jan 2012 21:31:40 GMT"
 
 	signed, err := signer.Sign([]byte(toSign))
 	if err != nil {
@@ -376,8 +375,12 @@ func signRSA(file string) {
 
 // loadPrivateKey loads an parses a PEM encoded private key file.
 func loadPublicKey(path string) (Unsigner, error) {
+	data, err := ioutil.ReadFile(path)
 
-	return parsePublicKey([]byte(readFile(path)))
+	if err != nil {
+		return nil, err
+	}
+	return parsePublicKey(data)
 }
 
 // parsePublicKey parses a PEM encoded private key.
@@ -404,7 +407,11 @@ func parsePublicKey(pemBytes []byte) (Unsigner, error) {
 
 // loadPrivateKey loads an parses a PEM encoded private key file.
 func loadPrivateKey(path string) (Signer, error) {
-	return parsePrivateKey([]byte(readFile("keys/rsa_key.pri")))
+	data, err := ioutil.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+	return parsePrivateKey(data)
 }
 
 // parsePublicKey parses a PEM encoded private key.
@@ -486,4 +493,54 @@ func (r *rsaPublicKey) Unsign(message []byte, sig []byte) error {
 	h.Write(message)
 	d := h.Sum(nil)
 	return rsa.VerifyPKCS1v15(r.PublicKey, crypto.SHA256, d, sig)
+}
+
+func genRSA2() {
+	// priv *rsa.PrivateKey;
+	// err error;
+	priv, err := rsa.GenerateKey(cryptorand.Reader, 2014)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	err = priv.Validate()
+	if err != nil {
+		fmt.Println("Validation failed.", err)
+	}
+
+	// Get der format. priv_der []byte
+	priv_der := x509.MarshalPKCS1PrivateKey(priv)
+
+	// pem.Block
+	// blk pem.Block
+	priv_blk := pem.Block{
+		Type:    "RSA PRIVATE KEY",
+		Headers: nil,
+		Bytes:   priv_der,
+	}
+
+	// Resultant private key in PEM format.
+	// priv_pem string
+	priv_pem := string(pem.EncodeToMemory(&priv_blk))
+
+	fmt.Printf(priv_pem)
+	writeFile(priv_pem, "keys/rsa_key.pri")
+
+	// Public Key generation
+
+	pub := priv.PublicKey
+	pub_der, err := x509.MarshalPKIXPublicKey(&pub)
+	if err != nil {
+		fmt.Println("Failed to get der format for PublicKey.", err)
+		return
+	}
+
+	pub_blk := pem.Block{
+		Type:    "PUBLIC KEY",
+		Headers: nil,
+		Bytes:   pub_der,
+	}
+	pub_pem := string(pem.EncodeToMemory(&pub_blk))
+	fmt.Printf(pub_pem)
+	writeFile(pub_pem, "keys/rsa_key.pub")
 }
