@@ -13,28 +13,26 @@ import (
 		"github.com/ipfs/go-ipfs-api"
 		//"bufio"
 		"bytes"
-		"time"
 )
 
 var chatRoom string //topic[0]
-var sh *shell.Shell
-//var pubsubHash string
-var haveMessagingFile bool
-var recordData string
-var alreadySubscribed bool
-var firstMessage bool
 var topic []string
-var output *shell.PubSubSubscription
-var err1 error
-var message string
-var username string
-var userInput string
-var firstAppend bool
-var entered bool
-var err2 error
-var firstPB bool
-var firstTry bool
+var sh *shell.Shell //to be able to use pubsub
+//var pubsubHash string
+var recordData string //what is published in pubsub
+var alreadySubscribed bool
+var firstMessage bool //to help with appending the file with "has joined"
+var output *shell.PubSubSubscription //to find out what is in pubsub
+var err1 error //if there is error in getting message from pubsub
+var message string //updated every time save is called with the new message
+var username string //to save the username
+//var userInput string //
+var firstAppend bool //to help with appending the file correctly
+var err2 error //if there is an error publishing
 
+/**
+	The page struct that includes a title and a body.
+**/
 type Page struct {
 		Title string
 		Body  []byte
@@ -64,70 +62,67 @@ func loadPage(title string) (*Page, error) {
 		return &Page{Title: title, Body: body}, nil
 }
 
+/**
+	To render the page with an html file.
+**/
 func renderTemplate(w http.ResponseWriter, tmpl string, p *Page) {
 		t, _ := template.ParseFiles(tmpl + ".html")
 		t.Execute(w, p)
 }
 
-func subHandler(w http.ResponseWriter, r *http.Request) {
+/**
+	The first page you see; it iwll start a daemon, and initialize global
+	variables. Subscribes you to a pubsub, but you unsubscribe when you
+	go to a different handler.
+**/
+func viewHandler(w http.ResponseWriter, r *http.Request) {
 
+		//make a file so that when you load the page, it will call a txt file
+		//instead of giving you an error
 		WriteStringToFile("newSub.txt", "Enter your username")
 
 		title := "newSub"
 		p, _ := loadPage(title)
 		renderTemplate(w, "newViewSub", p)
 
-		output, err1 := exec.Command("ipfs", "daemon", "--enable-pubsub-experiment").Output()
-			if err1 != nil {
-				os.Stderr.WriteString(err1.Error())
-		}
-		fmt.Println(output)
+		// fmt.Println("sub function")
+		// r.ParseForm()
+		// t, _ := template.ParseFiles("sub.html")
+		// t.Execute(w, nil)
+		// topic = r.Form["subscribe"]
+		// fmt.Println(topic)
 
 		//initialize the shell for pubsub
 		sh = shell.NewShell("localhost:5001")
+
+		//go sub(w, r)
 
 		//when the page loads, it wants to load the messaging.txt file
 		//so set title to messaging so load page will call messaging.txt
 		title = "messaging"
 		firstMessage = true
-		firstPB = true
-		firstTry = true
 		firstAppend = true
+		alreadySubscribed = false
 
 		//check if already have a messaging.txt file
 		_, err := os.Open("messaging.txt")
 		if err != nil {
 				//dont have the file, so create one
 				os.Stderr.WriteString(err.Error())
-				WriteStringToFile("messaging.txt", "Chat in dubsonly")
+				WriteStringToFile("messaging.txt", "Start chatting!")
 		}
 
-		if alreadySubscribed == false {
-				sub(w, r)
-				alreadySubscribed = true
-		}
-
-		//fmt.Println(string(haveFile))
-}
-
-func sub(w http.ResponseWriter, r *http.Request){
-		// fmt.Println("sub function")
-	  // r.ParseForm()
-	  // //t, _ := template.ParseFiles("newViewSub.html")
-	  // //t.Execute(w, nil)
-	  // topic = r.Form["subscribe"]
-	  // fmt.Println(topic)
-		//
-		// fmt.Println("about to subscribe")
-
-		output, err1 = sh.PubSubSubscribe("dubsonly")
-		if err1 != nil {
-			os.Stderr.WriteString(err1.Error())
-		}
-		fmt.Println("subscribed")
+		//subscribe you to the pubsub
+		// if alreadySubscribed == false {
+		// 		sub()
+		// 		alreadySubscribed = true
+		// }
 
 }
 
+/**
+	This handler will give you a textbox to enter your username.
+**/
 func editHandler(w http.ResponseWriter, r *http.Request) {
 
 		fmt.Println("edit handler")
@@ -141,6 +136,10 @@ func editHandler(w http.ResponseWriter, r *http.Request) {
 
 }
 
+/**
+	This will save the username that you typed into the edit handler
+	as the global variable username.
+**/
 func userHandler(w http.ResponseWriter, r *http.Request) {
 		title := r.URL.Path[len("/user/"):]
 		body := r.FormValue("body")
@@ -154,7 +153,8 @@ func userHandler(w http.ResponseWriter, r *http.Request) {
 		title = "messaging"
 
 		//message = username + " has joined" + "--\r\n"
-		http.Redirect(w, r, "/save/"+title, http.StatusFound)
+		//http.Redirect(w, r, "/save/"+title, http.StatusFound)
+		http.Redirect(w, r, "/sub/"+title, http.StatusFound)
 
 		if err != nil {
         http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -162,6 +162,66 @@ func userHandler(w http.ResponseWriter, r *http.Request) {
     }
 }
 
+func subHandler(w http.ResponseWriter, r *http.Request) {
+
+		fmt.Println("sub handler")
+
+		if r.Method == "GET" {
+				t, _ := template.ParseFiles("newSub.html")
+				t.Execute(w, nil)
+		} else {
+				sub(w, r)
+				t, _ := template.ParseFiles("newSub.html")
+				t.Execute(w, nil)
+	      fmt.Fprintf(w, "subscribed!")
+		}
+
+}
+
+/**
+	Function to subscribe you to a pubsub topic.
+**/
+func sub(w http.ResponseWriter, r *http.Request){
+
+		// output, err1 = sh.PubSubSubscribe("dubsonly")
+		// if err1 != nil {
+		// 	os.Stderr.WriteString(err1.Error())
+		// }
+		// fmt.Println("subscribed")
+
+		// fmt.Println("sub function")
+	  // r.ParseForm()
+	  // t, _ := template.ParseFiles("sub.html")
+	  // t.Execute(w, nil)
+	  // topic = r.Form["subscribe"]
+	  // fmt.Println(topic)
+
+		fmt.Println("sub function")
+	  r.ParseForm()
+	  t, _ := template.ParseFiles("newSub.html")
+	  t.Execute(w, nil)
+	  topic = r.Form["subscribe"]
+	  fmt.Println(topic)
+
+		fmt.Println("about to subscribe")
+
+		go subscribe()
+
+		fmt.Println("subscribed")
+
+}
+
+func subscribe() {
+		output, err1 = sh.PubSubSubscribe(topic[0])
+		if err1 != nil {
+			os.Stderr.WriteString(err1.Error())
+		}
+}
+
+/**
+	This will write a string to a new text file of any name that you want.
+	It will overwrite a text file if you already have one with that name.
+**/
 func WriteStringToFile(filepath, s string) error {
 		fo, err := os.Create(filepath)
 		if err != nil {
@@ -177,13 +237,16 @@ func WriteStringToFile(filepath, s string) error {
 		return nil
 }
 
+/**
+	This handler will display the messaging.txt file that you have.
+**/
 func messengerHandler(w http.ResponseWriter, r *http.Request) {
 
 		//subscribe the first time you open the page
-		if alreadySubscribed == false {
-				sub(w, r)
-				alreadySubscribed = true
-		}
+		// if alreadySubscribed == false {
+		// 		sub(w, r)
+		// 		alreadySubscribed = true
+		// }
 
 		//title := r.URL.Path[len("/messenger/"):]
 		title := "messaging"
@@ -206,7 +269,7 @@ func messengerHandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("sli is " + sli)
 
 		//renderTemplate(w, "messenger", p)
-		fmt.Fprintf(w, "<h1>Chat room: Dubsonly</h1>" +
+		fmt.Fprintf(w, "<h1>Chat room: %s</h1>" +
 				"<p> %s </p>" +
 				"<form action=\"/save/\" method=\"POST\">" +
 				"<textarea name=\"body\"> </textarea>" +
@@ -215,110 +278,42 @@ func messengerHandler(w http.ResponseWriter, r *http.Request) {
 				"<form action=\"/refresh/\" method=\"POST\">" +
 				"<input type=\"submit\" value=\"Refresh Page\">" +
 				"</form>",
-				sli)
+				topic[0], sli)
 
-
-		// if getPeers() > 0 {
-		//
-		// 	//sendFile()
-		//
-		// 	// t := time.Now()
-		// 	// pos := time.Since(t)
-		// 	// getPBFile()
-		// 	// if pos == time.Second {
-		// 	// 		break;
-		// 	// }
-		// 	//break;
-		//
-		// 	// done := countToTen()
-    //   // fmt.Println("countToTen() exited")
-    //   // <-done // block until countToTen()'s goroutine is done
-		//
-		// 	for start := time.Now(); time.Since(start) < time.Second; {
-		// 	    getPBFile()
-		// 	}
-		//
-		// 	http.Redirect(w, r, "/save/"+title, http.StatusFound)
-		//
-		// 	// for start := time.Now(); time.Since(start) < time.Second; {
-		// 	// 	if firstPB == true{
-		// 	// 		getPBFile()
-		// 	// 		firstPB = false
-		// 	// 		break
-		// 	// 	}
-		// 	// 	else{
-		// 	// 		tempRD = recordData
-		// 	// 		getPBFile()
-		// 	// 			if(tempRD != recordData){
-		// 	// 				break
-		// 	// 			}
-		// 	// 		}
-		// 	// }
-		// }
 }
 
-func countToTen() chan bool {
-    done := make(chan bool)
-    go func() {
-        for i := 0; i < 10; i++ {
-            time.Sleep(1 * time.Second)
-            fmt.Println(i)
-        }
-        done <- true
-    }()
-    return done
-}
-
+/**
+	This handler will save the message you typed into the message page, and
+	it will append the file. It will also send the message to the pubsub topic
+	you are subscribed to.
+**/
 func saveHandler(w http.ResponseWriter, r *http.Request) {
 
 		fmt.Println("save handler")
     title := r.URL.Path[len("/save/"):]
     body := r.FormValue("body")
     p := &Page{Title: title, Body: []byte(body)}
-    err := p.save() //where it saves the new text
+    err := p.save() //where it saves the new text as p.Body
 
-
+		//this will display username "has joined" when you first enter the chat
 		if firstMessage == true {
 				message = username + " has joined" + "--\r\n"
 				fmt.Println("message " + message)
 				firstMessage = false
 
-		} else {
+		} else { //or else it will displace your message that you type in
 				message = username + ": " + string(p.Body) + "--\r\n"
 				fmt.Println("message " + message)
 		}
 
 		//it changes the recordData, but still appends the username function above
 
-		userInput = message
-
-    WriteStringToFile("userInput.txt", message)
-
-		// if firstTry == true {
-		// 		fmt.Println("first try is true")
-		// 		fmt.Println("message is " + message)
-		// 		sendFile(message)
-		// 		AppendFile(message)
-		// 		firstTry = false
-		// } else {
-		// 		// getPBFile()
-		// 		getPeers()
+		// userInput = message
 		//
-		// 		fmt.Println("first try is false")
-		//
-		// 		getPBFile()
-		//
-		// 		AppendFile(recordData)
-		// }
+    // WriteStringToFile("userInput.txt", message)
 
-		sendFile(message)
-		AppendFile(message)
-
-		//fmt.Println("record data is " + recordData)
-		//WriteStringToFile("messaging.txt", recordData)
-
-
-		entered = false
+		sendFile(message) //publish the message in your pubsub chat room
+		AppendFile(message) //append the message to your messaging.txt file
 
     if err != nil {
         http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -331,9 +326,12 @@ func saveHandler(w http.ResponseWriter, r *http.Request) {
 
 }
 
+/**
+	Return the amount of peers in your chat room.
+**/
 func getPeers() int {
 		fmt.Println("get peers")
-		output1, err1 := exec.Command("ipfs", "pubsub", "dubsonly", "peers").CombinedOutput()
+		output1, err1 := exec.Command("ipfs", "pubsub", topic[0], "peers").CombinedOutput()
 		if err1 != nil {
 			os.Stderr.WriteString(err1.Error())
 		}
@@ -364,18 +362,10 @@ func getPeers() int {
 }
 
 /**
-	basically pubsubGetMessaging
+	This will get the message that was published to your chat room and
+	update the record data to that message.
 **/
 func getPBFile(){
-// start :=  time.Now()
-// 	for time.Since(start) < time.Second {
-// 			//getPBFile()
-// 			//break;
-
-			// time.Sleep(100 * time.Millisecond)
-			// fmt.Println(time.Since(start))
-
-			//firstAppend = false
 
 			output2, err3:= output.Next()
 			if err3 != nil {
@@ -402,7 +392,9 @@ func getPBFile(){
 
 }
 
-
+/**
+	This will add the new message string into your messaging.txt file.
+**/
 func AppendFile(message string) {
 
 	if firstAppend == true {
@@ -436,24 +428,6 @@ func AppendFile(message string) {
 		 firstAppend = false
 
 		} else {
-
-			// buf1, err5 := os.Open("messaging.txt")
-			//
-			// hash1, err5 := sh.Add(buf1)
-			// if err5 != nil {
-			// 	os.Stderr.WriteString(err5.Error())
-			// }
-			// fmt.Println("hash1 is " + hash1)
-			//
-			// theReader3, err6 := sh.Cat("/ipfs/" + string(hash1))
-			// if err6 != nil {
-			// 	 os.Stderr.WriteString(err6.Error())
-			// }
-			// buf7 := new(bytes.Buffer)
-			// buf7.ReadFrom(theReader3)
-			// newOutput3 := buf7.String()
-			// fmt.Println("new output 3 is " + newOutput3)
-
 
 			 WriteStringToFile("newMessage.txt", message)
 
@@ -498,6 +472,11 @@ func AppendFile(message string) {
 
 }
 
+/**
+	This will wait for someone to publish something in the chat room, and
+	it will change the record data and append the other person's message into
+	your messaging.txt file.
+**/
 func refreshHandler(w http.ResponseWriter, r *http.Request) {
 
 		fmt.Println("refresh handler")
@@ -513,11 +492,12 @@ func refreshHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 /**
-	basically pubsubTheHash
+	This will publish your message to the chat room, and also update your
+	record data to that message.
 **/
 func sendFile(theMessage string){
 
-		err2 = sh.PubSubPublish("dubsonly", theMessage)
+		err2 = sh.PubSubPublish(topic[0], theMessage)
 		if err2 != nil {
 			os.Stderr.WriteString(err2.Error())
 		}
@@ -542,8 +522,26 @@ func sendFile(theMessage string){
 		}
 }
 
+/**
+	Start the daemon.
+**/
+func daemon() {
+		output, err1 := exec.Command("ipfs", "daemon", "--enable-pubsub-experiment").Output()
+			if err1 != nil {
+				os.Stderr.WriteString(err1.Error())
+		}
+		fmt.Println(output)
+}
+
+
+
 func main(){
-		alreadySubscribed = false
+
+		go daemon()
+		//sh = shell.NewShell("localhost:5001")
+		//go sub()
+
+		http.HandleFunc("/view/", viewHandler)
 		http.HandleFunc("/sub/", subHandler)
 		http.HandleFunc("/save/", saveHandler)
 		http.HandleFunc("/edit/", editHandler)
