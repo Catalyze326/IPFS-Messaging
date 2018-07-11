@@ -1,69 +1,43 @@
-/* Background image */
-.jumbotron {
-  text-align: center;
-  padding-top: 10rem;
-  padding-bottom: 10rem;
-  text-shadow: 2px 2px #000;
-}
-
-.lead span {
-  color: orange;
-  font-weight: bold;
-}
-
-.bg-cover {
-  background-size: cover;
-  color: white;
-  background-position: center center;
-  position: relative;
-  z-index: -2;
-}
-
-.overlay {
-  background-color: #000;
-  opacity: 0.31;
-  position: absolute;
-  top: 0;
-  left: 0;
-  bottom: 0;
-  right: 0;
-  z-index: -1;
-}
-
-body{
-  background-color:#282828;
-  margin:0px;
-  font-family: "Lato", sans-serif;
-}
-
-
-
 .btn-circle {
-  background:url("pictures/micButton.png") no-repeat;
   width: 30px;
   height: 30px;
   text-align: center;
   padding: 6px 0;
   font-size: 12px;
   line-height: 1.428571429;
-  border-radius: 45px;
+  border-radius: 5px;
 }
 .btn-circle.btn-lg {
   width: 50px;
   height: 50px;
   padding: 10px 16px;
-  font-size: 18px;
+  font-size: 16px;
   line-height: 1.33;
   border-radius: 25px;
 }
 .btn-circle.btn-xl {
   width: 70px;
   height: 70px;
-  padding: 10px 16px;
+  padding: 10px 24px;
   font-size: 24px;
   line-height: 1.33;
-  border-radius: 35px;
+  border-radius: 40px;
 }
+body{
+  background-color:#282828;
+  margin:0px;
+  font-family: "Lato", sans-serif;
+}
+
+  .footer {
+    position: fixed;
+    background-color: #282828;
+    left: 0;
+    bottom: 0;
+    width: 100%;
+    color: black;
+    text-align: center;
+  }
 
   .sidenav {
     height: 100%;
@@ -97,24 +71,6 @@ body{
     right: 25px;
     font-size: 36px;
     margin-left: 50px;
-  }
-
-  @media screen and (max-height: 450px) {
-    .sidenav {
-      padding-top: 15px;
-    }
-    .sidenav a {
-      font-size: 18px;
-    }
-  }
-
-  * {
-    box-sizing: border-box;
-  }
-
-  body {
-    margin: 0;
-    font-family: Arial;
   }
 
   .header {
@@ -153,13 +109,19 @@ body{
     float: right;
   }
 
-  @media screen and (max-width: 500px) {
-    .header a {
-      float: none;
-      display: block;
-      text-align: left;
-    }
-    .header-right {
-      float: none;
-    }
+  .box__dragndrop,
+  .box__uploading,
+  .box__success,
+  .box__error {
+    display: none;
   }
+
+  .file-field.medium .file-path-wrapper {
+    height: 3rem; }
+    .file-field.medium .file-path-wrapper .file-path {
+      height: 2.8rem; }
+
+  .file-field.big-2 .file-path-wrapper {
+    height: 3.7rem; }
+    .file-field.big-2 .file-path-wrapper .file-path {
+      height: 3.5rem; }
