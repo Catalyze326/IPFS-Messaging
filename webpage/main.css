@@ -37,32 +37,30 @@ body{
 }
 
 
-
 .btn-circle {
-  background:url("pictures/micButton.png") no-repeat;
   width: 30px;
   height: 30px;
   text-align: center;
   padding: 6px 0;
   font-size: 12px;
   line-height: 1.428571429;
-  border-radius: 45px;
+  border-radius: 5px;
 }
 .btn-circle.btn-lg {
   width: 50px;
   height: 50px;
   padding: 10px 16px;
-  font-size: 18px;
+  font-size: 16px;
   line-height: 1.33;
   border-radius: 25px;
 }
 .btn-circle.btn-xl {
   width: 70px;
   height: 70px;
-  padding: 10px 16px;
+  padding: 10px 24px;
   font-size: 24px;
   line-height: 1.33;
-  border-radius: 35px;
+  border-radius: 40px;
 }
 
   .sidenav {

@@ -50,7 +50,7 @@ func main() {
 	//decrypt with the same func from a line earlier
 	encDec("keys/aes.key.enc", "keys/aes.key", true)
 
-	signRSA("keys/aes.key")
+	//	signRSA("keys/aes.key")
 	//signs the encrypted aes key with rsa and verrifies it to prove it is coming from a
 	//reliable source
 
