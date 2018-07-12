@@ -24,12 +24,14 @@ var alreadySubscribed bool
 var firstMessage bool //to help with appending the file with "has joined"
 var output *shell.PubSubSubscription //to find out what is in pubsub
 var err1 error //if there is error in getting message from pubsub
+var output2 *shell.PubSubSubscription //to find out what is in pubsub
+var err2 error //if there is error in getting message from pubsub
 var message string //updated every time save is called with the new message
 var username string //to save the username
 //var userInput string //
 var firstAppend bool //to help with appending the file correctly
-var err2 error //if there is an error publishing
-var saveHand bool
+var err3 error //if there is an error publishing
+var saveHand bool //to help with saving messages
 
 /**
 	The page struct that includes a title and a body.
@@ -119,7 +121,7 @@ func editHandler(w http.ResponseWriter, r *http.Request) {
     if err != nil {
         p = &Page{Title: title}
     }
-    renderTemplate(w, "newEdit", p)
+    renderTemplate(w, "newEdit", p) //open the html page
 
 }
 
@@ -133,7 +135,7 @@ func userHandler(w http.ResponseWriter, r *http.Request) {
 		p := &Page{Title: title, Body: []byte(body)}
 		err := p.save() //where it saves the new text
 
-		username = string(p.Body)
+		username = string(p.Body) //set the username as a global variable
 
 		fmt.Println(username)
 
@@ -188,6 +190,11 @@ func subscribe() {
 		output, err1 = sh.PubSubSubscribe(topic[0])
 		if err1 != nil {
 			os.Stderr.WriteString(err1.Error())
+		}
+
+		output2, err2 = sh.PubSubSubscribe("fileChannel" + topic[0])
+		if err2 != nil {
+			os.Stderr.WriteString(err2.Error())
 		}
 }
 
@@ -526,9 +533,9 @@ func getPeersMessageConst() {
 **/
 func sendFile(theMessage string){
 
-		err2 = sh.PubSubPublish(topic[0], theMessage)
-		if err2 != nil {
-			os.Stderr.WriteString(err2.Error())
+		err3 = sh.PubSubPublish(topic[0], theMessage)
+		if err3 != nil {
+			os.Stderr.WriteString(err3.Error())
 		}
 
 		fmt.Println("testing point 1")
