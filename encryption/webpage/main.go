@@ -3,10 +3,7 @@ package main
 import (
 	"html/template"
 	"io/ioutil"
-	"log"
 	"net/http"
-
-	"github.com/gorilla/mux"
 )
 
 type Page struct {
@@ -15,7 +12,7 @@ type Page struct {
 }
 
 // func index_handler(w http.ResponseWriter, r *http.Request) {
-// 	fmt.Fprintf(w, "dubs")
+// 	fmt.Fprintf(w, "")
 // }
 //
 // func main() {
@@ -45,7 +42,7 @@ func view(w http.ResponseWriter, r *http.Request) {
 }
 
 func edit(w http.ResponseWriter, r *http.Request) {
-	title := r.URL.Path[len("/mess/"):]
+	title := r.URL.Path[len("/test/"):]
 	p, _ := load(title)
 	t, _ := template.ParseFiles("messaging.html")
 	t.Execute(w, p)
@@ -59,34 +56,9 @@ func save(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/test/"+title, http.StatusFound)
 }
 
-var tmpls = template.Must(template.ParseFiles("index.html"))
-
-func Index(w http.ResponseWriter, r *http.Request) {
-	data := struct {
-		Title  string
-		Header string
-	}{
-		Title:  "Index Page",
-		Header: "Hello, World!",
-	}
-
-	if err := tmpls.ExecuteTemplate(w, "index.html", data); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-}
-
 func main() {
-	http.HandleFunc("/", view)
-	http.HandleFunc("/mess/", edit)
+	http.HandleFunc("/test/", view)
+	http.HandleFunc("/edit/", edit)
 	http.HandleFunc("/save/", save)
 	http.ListenAndServe(":8080", nil)
-	r := mux.NewRouter()
-	r.HandleFunc("/", Index)
-
-	r.PathPrefix("/styles/").Handler(http.StripPrefix("/styles/",
-		http.FileServer(http.Dir("templates/styles/"))))
-
-	http.Handle("/", r)
-	log.Fatalln(http.ListenAndServe(":9000", nil))
 }
