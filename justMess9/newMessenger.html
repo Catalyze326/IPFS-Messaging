@@ -1,0 +1,37 @@
+<!--
+<body>
+  <h1>Chat room: {{printf "%s" topic[0]}} </h1>
+  <p> {{printf "%s" .Body}} </p>
+  <form action="/save/" method="POST">
+    <textarea name="body"> </textarea>
+    <input type="submit" value="Save">
+  </form>
+  <form action="/upload/">
+    <input type="submit" value="Upload a File">
+  </form>
+  <form action="/recordFile/">
+    <input type="submit" value="Record Audio">
+  </form>
+  <form action="/exit/{{.Title}}">
+    <input type="submit" value="EXIT">
+  </form>
+</body> -->
+
+
+<body>
+  <h1>Chat room: </h1>
+  <p> {{printf "%s" sli}} </p>
+  <form action="/save/" method="POST">
+    <textarea name="body"> </textarea>
+    <input type="submit" value="Save">
+  </form>
+  <form action="/upload/">
+    <input type="submit" value="Upload a File">
+  </form>
+  <form action="/recordFile/">
+    <input type="submit" value="Record Audio">
+  </form>
+  <form action="/exit/{{.Title}}">
+    <input type="submit" value="EXIT">
+  </form>
+</body>

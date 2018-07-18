@@ -1,0 +1,21 @@
+<style>
+h1 {
+        background-color: #000099;
+        color: rgb(255, 255,255);
+}
+div {
+        background-color: #000099;
+        color: rgb(255, 255,255);
+}
+p {
+        background-color: #000099;
+        color: rgb(255, 255,255);
+}
+
+</style>
+
+<h1>{{.Title}}</h1>
+
+<p>[<a href="/login/{{.Title}}">Subscribe</a>]</p>
+
+<div>{{printf "%s" .Body}}</div>
