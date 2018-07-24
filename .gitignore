@@ -1,2 +1,9 @@
-C:\Users\597618\Documents\GitHub\IPFS-Messaging\.git\objects\9e\5e06a473a9124ca21f1faf415077cb1d3d7d2b
-encryption/doesEverything.go
+
+*.iml
+.idea/misc.xml
+.idea/modules.xml
+.idea/vcs.xml
+.idea/workspace.xml
+webpage/.idea/misc.xml
+webpage/.idea/modules.xml
+webpage/.idea/workspace.xml
