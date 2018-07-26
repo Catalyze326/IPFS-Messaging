@@ -185,33 +185,15 @@
   }
 
   input[type=submit]:hover {
-    background-color: darkorange;
-    border: 1px solid darkorange;
-    color: #282828;
+    /*background-color: darkorange;*/
+    /*border: 1px solid darkorange;*/
+      opacity: .5;
+      color: #282828;
     cursor: pointer;
     font-size: 16px;
     font-weight: 700;
   }
 
-  input[type=file] {
-
-    background-color: orange;
-    border: 1px solid orange;
-    color: #282828;
-    cursor: pointer;
-    font-size: 16px;
-    font-weight: 700;
-    text-align: right;
-  }
-
-  input[type=file]:hover {
-    background-color: darkorange;
-    border: 1px solid darkorange;
-    color: #282828;
-    cursor: pointer;
-    font-size: 16px;
-    font-weight: 700;
-  }
 
   input[type=text] {
     background-color: #282828;
@@ -233,6 +215,24 @@
     color: black;
     text-align: right;
   }
+
+  .image-upload > input
+  {
+      display: none;
+  }
+
+  .image-upload img
+  {
+      height: 45px;
+      width: auto;
+      cursor: pointer;
+  }
+  .image-upload img:hover
+  {
+      cursor: pointer;
+      opacity: .5;
+  }
+
 
 </style>
 
@@ -285,22 +285,45 @@
   </script>
 
     <div class="footer">
-      <form action="/save/" method="POST">
-        <div class="col-md-9">
-          <input name="body" type="text" autocomplete="off" class="form-control input-lg" placeholder="Enter Message">
-        </div>
-        <div class="col-md-3">
-          <input type="submit" value="Save">
-          <form enctype="multipart/form-data" method="POST" class="text-right">
-              <input type="file" id="file" name="uploadfile" value="Choose File">
-              <input type="text" READONLY id="test" name="test" value="">
-              <input type="submit"  value="Record Audio" onclick="one()">
-              <input type="submit"  value="Upload File" onclick="three()">
+          <form action="/save/" method="POST">
+              <div class="col-xs-8 col-md-10">
+                  <input name="body" type="text" autocomplete="off" class="form-control input-lg" placeholder="Enter Message">
+              </div>
+              <div>
+                  <div>
+                      <input type="submit"  class="hidden" value="Save">
+
+                  </div>
+                  <form enctype="multipart/form-data" method="POST">
+                          <div class="image-upload col-xs-2 col-md-2">
+                              <label for="record">
+                                  <img src="mic.png"/>
+                              </label>
+                              <input type="submit"  id="record" value="Record Audio" title="Record Audio" onclick="one()">
+                              <label for="choseFile">
+                                  <img   src="folder.png"/>
+                                  <!--http://ipfs.io/ipfs/QmdW5sPzD6ZNGLsVC4Zj5Pdx8AyVPkMjfyF9HiLA4yGwfV-->
+                              </label>
+                              <input type="file" id="choseFile" name="uploadfile" title="Upload File" value="Choose File">
+
+                              <label for="upload">
+                                  <img   src="upload.png"/>
+                                  <!--http://ipfs.io/ipfs/QmdW5sPzD6ZNGLsVC4Zj5Pdx8AyVPkMjfyF9HiLA4yGwfV-->
+                              </label>
+                              <input type="submit" id="upload" value="Upload File" title="Chose File To Upload" onclick="three()">
+
+                          </div>
+                      <div class="col-md-2">
+                          <input type="text" READONLY id="test" name="test" hidden value="">
+                      </div>
+
+
+
+                  </form>
+              </div>
           </form>
-        </div>
-      </form>
-    </div>
-    <script type="text/javascript">
+      </div>
+   <script type="text/javascript">
       function one() {
         document.getElementById("test").value = "Recording...";
       }
