@@ -263,6 +263,7 @@ func subHandler(w http.ResponseWriter, r *http.Request) {
 				// t, _ := template.ParseFiles("newSub.html")
 				// t.Execute(w, nil)
 	      fmt.Fprintf(w, "subscribed!")
+				sendFile(username + ": has joined --")
 		}
 
 }
@@ -312,12 +313,14 @@ func saveHandler(w http.ResponseWriter, r *http.Request) {
 				os.Stderr.WriteString(err7.Error())
     }
 
-		fmt.Println("count is " + string(count))
-		if count > 1 {
-			 saveHand = true
-			 newSaveHand = true
-		}
-		count ++
+		// fmt.Println("count is " + string(count))
+		// if count > 1 {
+		// 	 saveHand = true
+		// 	 newSaveHand = true
+		// }
+		// count ++
+
+		saveHand = true
 
 		title = "messaging"
 
@@ -353,28 +356,7 @@ func messengerHandler(w http.ResponseWriter, r *http.Request) {
 
 			fmt.Println("sli is " + sli)
 
-			//renderTemplate(w, "newMessengerSub", p)
-			// fmt.Fprintf(w, "<head>" +
-			// 		"<meta http-equiv=%s content=%s />" +
-			// 		"</head>" +
-			// 	  "<body>" +
-			// 		"<h1>Chat room: %s</h1>" +
-			// 		"<p> %s </p>" +
-			// 		"<form action=\"/save/\" method=\"POST\">" +
-			// 		"<textarea name=\"body\"> </textarea>" +
-			// 		"<input type=\"submit\" value=\"Save\">" +
-			// 		"</form>" +
-			// 		"<form action=\"/upload/\">" +
-      //     "<input type=\"submit\" value='Upload a File'>"+
-      //     "</form>"+
-			// 		"<form action=\"/recordFile/\">" +
-      //     "<input type=\"submit\" value='Record Audio'>"+
-      //     "</form>"+
-      //     "<form action=\"/exit/{{.Title}}\">" +
-      //     "<input type=\"submit\" value='EXIT'>"+
-      //     "</form>"+
-			// 		"</body>",
-			// 		"refresh", "5", topic[0], sli)
+
 
 				fmt.Fprintf(w,
 					  "<body>" +
@@ -889,7 +871,7 @@ func AppendFile(message string) {
 			fmt.Println("first append is false")
 	}
 
-		  if countAppend < 1 {
+		  if firstAppend == true {
 			WriteStringToFile("newMessage.txt", message)
 
 			buf, err4 := os.Open("newMessage.txt")
@@ -957,7 +939,6 @@ func AppendFile(message string) {
 
 	 }
 
-	 countAppend++
 }
 
 /**
