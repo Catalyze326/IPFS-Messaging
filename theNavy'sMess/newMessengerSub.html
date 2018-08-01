@@ -18,6 +18,9 @@ p {
 <p>{{printf "%s" .Body}}<br></p>
 
 <!-- <form action="/save/{{.Title}}" method="POST"> -->
+<head>
+    <meta http-equiv=%s content=%s />
+</head>
 <form action="/save/{{.Title}}" method="POST">
 <textarea name="body" placeholder="Add to the discussion!"> </textarea>
 <div><input type="submit" value="Save"></div>
