@@ -5,7 +5,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
-  <title>New Sub</title>
+  <title>Messenger</title>
   <link rel="icon" href="http://ipfs.io/ipfs/QmPSKDWkGQw3kRm1wjakMzXchUnky52FDQqEkPsr22bWpU/">
 </head>
 <!-- Start bootstrap text -->
@@ -157,23 +157,23 @@
     }
   }
 
-  .button {
-    text-decoration: none;
-    display: block;
-    height: 50px;
-    background: orange;
-    padding: 15px;
-    border-radius: 5px;
-    color: black;
-  }
+  /*.button {*/
+    /*text-decoration: none;*/
+    /*display: block;*/
+    /*height: 50px;*/
+    /*background: orange;*/
+    /*padding: 15px;*/
+    /*border-radius: 5px;*/
+    /*color: black;*/
+  /*}*/
 
-  .button:hover {
-    text-decoration: none;
-    background-color: #282828;
-    border: 1px solid orange;
-    color: orange;
-    cursor: pointer;
-  }
+  /*.button:hover {*/
+    /*text-decoration: none;*/
+    /*background-color: #282828;*/
+    /*border: 1px solid orange;*/
+    /*color: orange;*/
+    /*cursor: pointer;*/
+  /*}*/
 
   input[type=text] {
     background-color: #282828;
@@ -185,6 +185,16 @@
     margin: 4px 2px;
     cursor: pointer;
   }
+
+  input[type=button] {
+      background-color: #282828;
+      border: none;
+      /*background-image: url("pictures/folder.png");*/
+      cursor: pointer;
+      height: 100px;
+
+  }
+
 
   .footer {
     position: fixed;
@@ -206,6 +216,7 @@
       height: 45px;
       width: auto;
       cursor: pointer;
+      background: #282828;
   }
   .image-upload img:hover
   {
@@ -253,72 +264,68 @@
       $("#lesen").click(function() {
 
         $.ajax({
-          url: "http://localhost:8080/java/",
+          url: "http://localhost:8080/func1/",
           dataType: "text",
           success: function(data) {
-            $(".text").html(data);
+            $("#nothing").html(data);
           }
         });
       });
+
     });
 
   </script>
 
-    <div class="footer">
-          <form action="/save/" method="POST">
-              <div class="col-xs-8 col-md-10">
-                  <input name="body" type="text" autocomplete="off" class="form-control input-lg" placeholder="Enter Message">
-              </div>
-              <div>
-                  <div>
-                      <input type="submit"  class="hidden" value="Save">
+  <div class="text">
 
-                  </div>
-                  <form enctype="multipart/form-data" method="POST">
-                          <div class="image-upload col-xs-2 col-md-2">
-                              <label for="record">
-                                  <img src="mic.png">
-                                  <!--<img src="http://ipfs.io/ipfs/QmQmRHLSM6ibswaToPb2S4ZG9CBbrEcQcvqaaAUQvbnUbu"/>-->
-                              </label>
-                              <input type="submit"  id="record" value="Record Audio" title="Record Audio" onclick="one()">
-                              <label for="choseFile">
-                                  <img src="folder.png">
-                                  <!--<img src="http://ipfs.io/ipfs/QmVBaM9GHD6DBxfik2y1dynRYnfxWhVARjLGoeiXLN7izC"/>-->
-                                  <!--http://ipfs.io/ipfs/QmQmRHLSM6ibswaToPb2S4ZG9CBbrEcQcvqaaAUQvbnUbu-->
-                              </label>
-                              <input type="file" id="choseFile" name="uploadfile" title="Upload File" value="Choose File">
+  </div>
 
-                              <label for="upload">
-                                  <img src="upload.png">
-                                  <!--<img src="http://ipfs.io/ipfs/QmXXVypyiEznE1SAePjVhaUhSarAKQZYFTJ4PcUq3sQ95v"/>-->
-                                  <!--http://ipfs.io/ipfs/QmdW5sPzD6ZNGLsVC4Zj5Pdx8AyVPkMjfyF9HiLA4yGwfV-->
-                              </label>
-                              <input type="submit" id="upload" value="Upload File" title="Chose File To Upload" onclick="three()">
-                          </div>
-                      <div class="col-md-2">
-                          <input type="text" READONLY id="test" name="test" hidden value="">
-                      </div>
+    <!-- <div class="footer"> -->
+  <div class="footer">
+      <form action="/save/" method="POST">
+          <div class="col-xs-8 col-md-10">
+              <input name="body" type="text" autocomplete="off" class="form-control input-lg" placeholder="Enter Message">
+          </div>
+          <div>
+              <input type="submit"  class="hidden" value="Save">
+          </div>
+      </form>
+<div class="col-xs-2 col-md-2 center">
+    <form>
+        <div class="image-upload col-md-4">
+            <div class="button">
+                <label for="lesen">
+                    <img src="http://ipfs.io/ipfs/QmVBaM9GHD6DBxfik2y1dynRYnfxWhVARjLGoeiXLN7izC">
+                </label>
+                <input type="button" hidden id="lesen" value="Record Audio"/>
+            </div>
+        </div>
+    </form>
+
+    <form method="GET" enctype="multipart/form-data">
+        <div class="image-upload col-md-4">
+            <label for="file">
+                <img  src="http://ipfs.io/ipfs/QmQmRHLSM6ibswaToPb2S4ZG9CBbrEcQcvqaaAUQvbnUbu">
+            </label>
+            <input type="file" id="file" name="file" multiple>
+        </div>
+
+        <!--<input type="submit">-->
+    <div class="col-md-4 image-upload">
+        <button>
+            <img src="http://ipfs.io/ipfs/QmXXVypyiEznE1SAePjVhaUhSarAKQZYFTJ4PcUq3sQ95v" >
+        </button>
+    </div>
+
+
+</div>
 
 
 
-                  </form>
-              </div>
+</div>
+
+
           </form>
-      </div>
-   <script type="text/javascript">
-      function one() {
-        document.getElementById("test").value = "Recording...";
-      }
-
-      function two() {
-        document.getElementById("test").value = "file chosen";
-      }
-
-      function three() {
-        document.getElementById("test").value = "Uploading...";
-      }
-
-    </script>
   </body>
 
 </html>
